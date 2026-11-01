@@ -257,11 +257,15 @@ async function lapForRace(race) {
       if (pkg) return { pkg, label: `Vuelta más rápida del GP de ${y}` };
     }
   }
+  // Si la carrera ya se corrió pero sus datos no han salido, se avisa.
+  const pending = raceDone(race)
+    ? `Los datos de la vuelta más rápida de ${y} todavía no están disponibles. Vuelve en un rato; mientras tanto, esta es la del año anterior.`
+    : '';
   for (const py of [y - 1, y - 2]) {
     const m = await findMeeting(race, py).catch(() => null);
     if (!m) continue;
     const pkg = await fastestLapPackage(m).catch(() => null);
-    if (pkg) return { pkg, label: `Vuelta más rápida del GP de ${py}` };
+    if (pkg) return { pkg, label: `Vuelta más rápida del GP de ${py}`, pending };
   }
   return null;
 }
@@ -313,6 +317,7 @@ async function showCircuit(race) {
   const p = res.pkg;
   const sec = p.sectors.map((s, i) => `<div><span>Sector ${i + 1}</span><b>${s ? s.toFixed(3) : '—'}</b></div>`).join('');
   $('#lap-info').innerHTML = `
+    ${res.pending ? `<p class="notice">${esc(res.pending)}</p>` : ''}
     <h3>${g('vueltaRapida', esc(res.label))}</h3>
     <div class="stats">
       <div class="stat stat--wide"><span>Piloto</span><b style="color:${p.driver.colour}">${esc(p.driver.name)}</b> <span class="muted">${esc(p.driver.team)}</span></div>
@@ -547,7 +552,8 @@ async function main() {
   initGlossary();
 
   initStandings();
-  initResults().then(renderFerrari);
+  const lastRaceP = initResults();
+  lastRaceP.then(renderFerrari);
   initCompare().catch(() => { $('#cmp-body').innerHTML = '<p class="error">No se pudieron cargar los pilotos.</p>'; });
 
   let races;
@@ -566,6 +572,19 @@ async function main() {
 
   renderNext(races);
   initCircuitChips(races);
+
+  // Aviso si la última carrera ya se corrió pero sus resultados no han salido.
+  lastRaceP.then((published) => {
+    const done = [...races].reverse().find(raceDone);
+    if (!done) return;
+    const behind = !published || +published.season < +done.season ||
+      (published.season === done.season && +published.round < +done.round);
+    if (!behind) return;
+    const msg = `Los resultados del ${done.raceName} todavía no están disponibles. Vuelve en un rato: la página se actualiza sola.`;
+    $('#pending').innerHTML = `<p>${esc(msg)}</p>`;
+    $('#pending').classList.remove('hidden');
+    $('#results-body').insertAdjacentHTML('beforebegin', `<p class="notice">Estos son los de la carrera anterior. ${esc(msg)}</p>`);
+  });
 
   const winners = {};
   jolpica.finishedAt(1).then((list) => {

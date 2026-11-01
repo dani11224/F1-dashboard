@@ -119,6 +119,19 @@ main { max-width: 720px; margin: 0 auto; padding: 4px 16px 40px; }
 .card--ferrari h3 { margin: 0 0 4px; font-size: 18px; }
 .card--ferrari p { margin: 0; color: #ffd9d9; }
 
+/* Avisos */
+.notice {
+  margin: 10px 0;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: rgba(255, 210, 74, .1);
+  border: 1px solid rgba(255, 210, 74, .35);
+  color: #ffe9a8;
+  font-size: 14px;
+}
+.notice p { margin: 0; }
+.notice--top { margin: 12px 0; }
+
 /* Controles segmentados y chips */
 .seg { display: inline-flex; background: var(--card-2); border-radius: 999px; padding: 3px; }
 .seg button {
