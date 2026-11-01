@@ -49,15 +49,21 @@ function lapStr(sec) {
 }
 
 // ---------- Hoja inferior (glosario, nota) ----------
+let sheetOpenedAt = 0;
 function openSheet(title, html, cls = '') {
   $('#sheet-title').textContent = title;
   $('#sheet-body').innerHTML = html;
   $('#sheet-body').className = cls;
   $('#sheet').classList.remove('hidden');
+  sheetOpenedAt = Date.now();
 }
 function closeSheet() { $('#sheet').classList.add('hidden'); }
 $('#sheet-close').addEventListener('click', closeSheet);
-$('#sheet').addEventListener('click', (e) => { if (e.target.id === 'sheet') closeSheet(); });
+// Tocar fuera cierra la hoja, pero no justo después de abrirla
+// (así un toque extra no la cierra sin querer).
+$('#sheet').addEventListener('click', (e) => {
+  if (e.target.id === 'sheet' && Date.now() - sheetOpenedAt > 1000) closeSheet();
+});
 document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeSheet(); });
 document.addEventListener('click', (e) => {
   const el = e.target.closest('.g[data-g]');
@@ -80,7 +86,9 @@ function initGreeting() {
     dot.style.transform = `scale(${1 + taps * 0.18})`;
     dot.style.boxShadow = `0 0 0 ${4 + taps * 2}px rgba(255, 210, 74, ${0.25 + taps * 0.08})`;
   };
-  badge.addEventListener('click', () => {
+  let lastTouch = 0;
+  const onTap = () => {
+    if (!$('#sheet').classList.contains('hidden')) return;
     taps++;
     badge.classList.remove('tap');
     void badge.offsetWidth;
@@ -95,6 +103,17 @@ function initGreeting() {
       const n = M.notaEscondida;
       openSheet(n.titulo, n.parrafos.map((p) => `<p>${esc(p)}</p>`).join('') + `<p class="muted">${esc(n.firma)}</p>`, 'note');
     }
+  };
+  // En el celular se usa el toque directo y se cancela el zoom por doble toque.
+  badge.addEventListener('touchend', (e) => {
+    e.preventDefault();
+    lastTouch = Date.now();
+    onTap();
+  }, { passive: false });
+  // En computador, el clic normal (se ignora el clic que el celular simula después de un toque).
+  badge.addEventListener('click', () => {
+    if (Date.now() - lastTouch < 800) return;
+    onTap();
   });
 }
 
