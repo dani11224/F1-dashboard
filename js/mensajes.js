@@ -39,6 +39,7 @@ export const notaEscondida = {
     'Espero que te sientas mejor.',
     'Te hice esto para que tengas todo lo de la F1 en un solo lugar.',
     'Descansa y cuídate.',
+    'Y aunque no tenga ni la menor idea de lo que pasa en la F1, me quejo contigo.',
   ],
   firma: 'Daniel',
 };
