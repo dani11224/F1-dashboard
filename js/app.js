@@ -204,8 +204,17 @@ function renderCalendar(races, winners) {
     if (!b) return;
     const race = races.find((r) => r.round === b.dataset.round);
     if (race) {
+      // Marca el chip solo si la carrera es la próxima o la última.
+      document.querySelectorAll('#circuit-chips .chip').forEach((c) => {
+        c.classList.toggle('on', c.dataset.round === race.round);
+      });
       showCircuit(race);
-      $('#circuito').scrollIntoView({ behavior: 'smooth' });
+      // Sube directo a la pista 3D, centrada en la pantalla.
+      requestAnimationFrame(() => {
+        const r = $('#track').getBoundingClientRect();
+        const y = window.scrollY + r.top - Math.max((window.innerHeight - r.height) / 2, 60);
+        window.scrollTo({ top: y, behavior: 'smooth' });
+      });
     }
   });
 }
@@ -321,7 +330,7 @@ function initCircuitChips(races) {
   if (next) chips.push(['next', 'Próximo GP', next]);
   if (last) chips.push(['last', 'Último GP', last]);
   const box = $('#circuit-chips');
-  box.innerHTML = chips.map(([k, label]) => `<button class="chip" data-k="${k}">${label}</button>`).join('');
+  box.innerHTML = chips.map(([k, label, r]) => `<button class="chip" data-k="${k}" data-round="${r.round}">${label}</button>`).join('');
 
   const select = (k) => {
     box.querySelectorAll('.chip').forEach((c) => c.classList.toggle('on', c.dataset.k === k));
