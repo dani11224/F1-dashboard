@@ -1,4 +1,4 @@
-# Box, box 🏎️
+# F1-dashboard
 
 Un muro de boxes personal de la F1: próximo GP con cuenta regresiva, campeonato, resultados, comparador de pilotos, calendario, glosario y cada circuito en 3D con la vuelta más rápida animada.
 
