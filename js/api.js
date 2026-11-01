@@ -84,11 +84,11 @@ export const jolpica = {
   // Últimos ganadores en un circuito (del más reciente al más viejo).
   circuitWinners: async (circuitId, n = 5) => {
     const base = `${J}/circuits/${circuitId}/results/1.json`;
-    const first = await getJSON(`${base}?limit=1`, 1440);
+    const first = await getJSON(`${base}?limit=1`, 60);
     const total = +first.MRData.total || 0;
     if (!total) return [];
     const off = Math.max(0, total - n);
-    const d = await getJSON(`${base}?limit=${n}&offset=${off}`, 1440);
+    const d = await getJSON(`${base}?limit=${n}&offset=${off}`, 60);
     return races(d).reverse();
   },
 };
