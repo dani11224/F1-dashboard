@@ -74,12 +74,24 @@ function initGreeting() {
 
   let taps = 0;
   let timer;
-  $('#badge').addEventListener('click', () => {
+  const badge = $('#badge');
+  const dot = badge.querySelector('.badge__dot');
+  const setDot = () => {
+    dot.style.transform = `scale(${1 + taps * 0.18})`;
+    dot.style.boxShadow = `0 0 0 ${4 + taps * 2}px rgba(255, 210, 74, ${0.25 + taps * 0.08})`;
+  };
+  badge.addEventListener('click', () => {
     taps++;
+    badge.classList.remove('tap');
+    void badge.offsetWidth;
+    badge.classList.add('tap');
+    if (navigator.vibrate) navigator.vibrate(15);
+    setDot();
     clearTimeout(timer);
-    timer = setTimeout(() => (taps = 0), 2500);
+    timer = setTimeout(() => { taps = 0; setDot(); }, 2500);
     if (taps >= 5) {
       taps = 0;
+      setDot();
       const n = M.notaEscondida;
       openSheet(n.titulo, n.parrafos.map((p) => `<p>${esc(p)}</p>`).join('') + `<p class="muted">${esc(n.firma)}</p>`, 'note');
     }
