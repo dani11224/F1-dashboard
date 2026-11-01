@@ -42,7 +42,7 @@ export class Track3D {
     el.appendChild(r.domElement);
 
     this.scene = new THREE.Scene();
-    this.scene.fog = new THREE.Fog(0x0d0f14, 160, 320);
+    this.scene.fog = new THREE.Fog(0x0d0f14, 260, 520);
     this.camera = new THREE.PerspectiveCamera(42, 1, 0.1, 2000);
 
     this.scene.add(new THREE.HemisphereLight(0xffffff, 0x222233, 1.1));
@@ -78,8 +78,10 @@ export class Track3D {
     const w = this.el.clientWidth || 300;
     const h = this.el.clientHeight || 300;
     this.renderer.setSize(w, h, false);
+    const changed = Math.abs(this.camera.aspect - w / h) > 0.01;
     this.camera.aspect = w / h;
     this.camera.updateProjectionMatrix();
+    if (changed) this.fitCamera?.();
   }
 
   clear() {
@@ -208,11 +210,8 @@ export class Track3D {
     const box = new THREE.Box3().setFromPoints(samples);
     const center = box.getCenter(new THREE.Vector3());
     const size = box.getSize(new THREE.Vector3());
-    const span = Math.max(size.x, size.z);
-    const dist = span * (this.camera.aspect < 1 ? 1.45 : 1.05);
-    this.camera.position.set(center.x, center.y + dist * 0.55, center.z + dist * 0.85);
-    this.controls.target.copy(center);
-    this.controls.update();
+    this.fitBox = { center, size };
+    this.fitCamera();
 
     this.anim = { pts, lapMs, i: 0 };
     this.t = 0;
@@ -220,6 +219,23 @@ export class Track3D {
     this.playing = true;
     this.onPlayState(true);
     this.placeCar(0);
+  }
+
+  // Aleja la cámara lo justo para que el circuito quepa completo,
+  // tanto a lo ancho como a lo largo, en cualquier tamaño de pantalla.
+  fitCamera() {
+    if (!this.fitBox) return;
+    const { center, size } = this.fitBox;
+    const vfov = THREE.MathUtils.degToRad(this.camera.fov);
+    const hfov = 2 * Math.atan(Math.tan(vfov / 2) * this.camera.aspect);
+    const distW = (size.x / 2) / Math.tan(hfov / 2);
+    const distH = (size.z * 0.6 / 2) / Math.tan(vfov / 2);
+    const dist = Math.max(distW, distH) * 1.18;
+    const dir = new THREE.Vector3(0, 0.55, 0.85).normalize();
+    this.camera.position.copy(center).addScaledVector(dir, dist);
+    this.controls.target.copy(center);
+    this.controls.maxDistance = Math.max(260, dist * 1.6);
+    this.controls.update();
   }
 
   placeCar(t) {
